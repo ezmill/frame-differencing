@@ -12,6 +12,7 @@ var rt1, rt2;
 var material1, material2;
 var planeGeometry;
 var mesh1, mesh2;
+var mouseX, mouseY;
 var time = 0.0;
 initScene();
 function initScene(){
@@ -26,17 +27,30 @@ function initScene(){
 	controls = new THREE.OrbitControls(camera);
 
 
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true});
     renderer.setSize(w, h);
     renderer.setClearColor(0xffffff, 1);
     container.appendChild(renderer.domElement);
 
     scene = new THREE.Scene();
 
+    initGlobalUniforms();
     initCameraTex();
+	document.addEventListener( 'keydown', onKeyDown, false );
+
+    document.addEventListener('mousemove', onDocumentMouseMove, false);
+    // document.addEventListener('mousedown', onDocumentMouseDown, false);
+
     animate();
 }
-
+function initGlobalUniforms(){
+	globalUniforms = {
+		time: {type: 'f', value: time},
+		resolution: {type: 'v2', value: new THREE.Vector2(w,h)},
+		mouseX: {type: 'f', value: 0.0},
+		mouseY: {type: 'f', value: 0.0}
+	}
+}
 function initCameraTex(){
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
     if (navigator.getUserMedia) {       
@@ -44,6 +58,8 @@ function initCameraTex(){
         	var url = window.URL || window.webkitURL;
 			video = document.createElement("video");
 	        video.src = url ? url.createObjectURL(stream) : stream;
+	        // video.src = "lamp.mp4";
+	        // video.playbackRate = 0.002;
 	        video.play();
 	        videoLoaded = true;
 	        tex = new THREE.Texture(video);
@@ -58,7 +74,6 @@ function initCameraTex(){
 
 function initFrameDifferencing(){
 	planeGeometry = new THREE.PlaneBufferGeometry(w,h);
-	dummyTex = new THREE.ImageUtils.loadTexture("img/test.png")
 
 	scene1 = new THREE.Scene();
 	rt1 = new THREE.WebGLRenderTarget(w, h, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat });
@@ -66,7 +81,9 @@ function initFrameDifferencing(){
 		uniforms: {
 			time: { type: 'f' , value: time},
 			resolution: {type: 'v2', value: new THREE.Vector2(w,h)},
-			texture: {type: 't', value: camTex}
+			texture: {type: 't', value: camTex},
+			mouseX: {type: 'f', value: mouseX},
+			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
 		fragmentShader: document.getElementById("flowFs").textContent
@@ -113,7 +130,9 @@ function initFrameDifferencing(){
 		uniforms: {
 			time: { type: 'f' , value: time},
 			resolution: {type: 'v2', value: new THREE.Vector2(w,h)},
-			texture: {type: 't', value: rtDiff}
+			texture: {type: 't', value: rtDiff},
+			mouseX: {type: 'f', value: mouseX},
+			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
 		fragmentShader: document.getElementById("fbFs").textContent
@@ -127,10 +146,12 @@ function initFrameDifferencing(){
 		uniforms: {
 			time: { type: 'f' , value: time},
 			resolution: {type: 'v2', value: new THREE.Vector2(w,h)},
-			texture: {type: 't', value: rtFB}
+			texture: {type: 't', value: rtFB},
+			mouseX: {type: 'f', value: mouseX},
+			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("flowFs").textContent
+		fragmentShader: document.getElementById("chromaFs").textContent
 	});
 	meshFB2 = new THREE.Mesh(planeGeometry, materialFB2);
 	sceneFB2.add(meshFB2);
@@ -149,7 +170,7 @@ function draw(){
 	time+=0.01;
     camTex.needsUpdate = true;
 
-    expand(1.01);
+    expand(1.0);
     // materialDiff.uniforms.texture.value = rtFB;
     material1.uniforms.texture.value = rtDiff;
     // material2.uniforms.texture.value = rtFB;
@@ -174,4 +195,62 @@ function draw(){
 
 function expand(expand){
 		meshDiff.scale.set(expand,expand,expand);
+}
+function map(value,max,minrange,maxrange) {
+    return ((max-value)/(max))*(maxrange-minrange)+minrange;
+}
+
+function onDocumentMouseMove(event){
+	unMappedMouseX = (event.clientX );
+    unMappedMouseY = (event.clientY );
+    mouseX = map(unMappedMouseX, window.innerWidth, -10.0,10.0);
+    mouseY = map(unMappedMouseY, window.innerHeight, -10.0,10.0);
+
+    materialFB2.uniforms.mouseX.value = mouseX;
+    material1.uniforms.mouseX.value = mouseX;
+    materialFB2.uniforms.mouseY.value = mouseY;
+    material1.uniforms.mouseY.value = mouseY;
+}
+function onKeyDown( event ){
+	if( event.keyCode == "32"){
+		screenshot();
+		
+function screenshot(){
+	// var i = renderer.domElement.toDataURL('image/png');
+	var blob = dataURItoBlob(renderer.domElement.toDataURL('image/png'));
+	var file = window.URL.createObjectURL(blob);
+	var img = new Image();
+	img.src = file;
+    img.onload = function(e) {
+	    // window.URL.revokeObjectURL(this.src);
+	    window.open(this.src);
+
+    }
+	 // window.open(i)
+	// insertAfter(img, );
+}
+//
+		function dataURItoBlob(dataURI) {
+		    // convert base64/URLEncoded data component to raw binary data held in a string
+		    var byteString;
+		    if (dataURI.split(',')[0].indexOf('base64') >= 0)
+		        byteString = atob(dataURI.split(',')[1]);
+		    else
+		        byteString = unescape(dataURI.split(',')[1]);
+
+		    // separate out the mime component
+		    var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+		    // write the bytes of the string to a typed array
+		    var ia = new Uint8Array(byteString.length);
+		    for (var i = 0; i < byteString.length; i++) {
+		        ia[i] = byteString.charCodeAt(i);
+		    }
+
+		    return new Blob([ia], {type:mimeString});
+		}
+		function insertAfter(newNode, referenceNode) {
+		    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+		}
+	}
 }

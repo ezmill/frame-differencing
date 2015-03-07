@@ -56,7 +56,7 @@ void main(){
 
     vec2 tc = vUv;
     vec4 look = texture2D(texture,tc);//sample repos texture
-    vec2 offs = vec2(look.y-look.x,look.w-look.z)*0.009;
+    vec2 offs = vec2(look.y-look.x,look.w-look.z)*0.001;
     vec2 coord = offs+tc;  //relative coordinates
     
     vec4 repos = texture2D(texture, coord);
@@ -81,7 +81,7 @@ void main(){
       vec2 uv = vUv;
       // vec2 uv = vUv*0.05 + vec2(0.62, 0.57);
       
-      vec2 e = 0.5/resolution.xy;
+      vec2 e = 1.0/resolution.xy;
       
       
        float am1 = 0.5*sin( time );
@@ -90,18 +90,18 @@ void main(){
       // float am2 = 10.0;
       
       for( int i=0; i<25; i++ ){
-        float h  = dot( texture2D(texture, uv*0.5             ).xyz, vec3(0.333) );
+        float h  = dot( texture2D(texture, uv             ).xyz, vec3(0.333) );
         float h1 = dot( texture2D(texture, uv+vec2(e.x,mouseX)).xyz, vec3(0.333) );
         float h2 = dot( texture2D(texture, uv+vec2(mouseY,e.y)).xyz, vec3(0.333) );
             // gradient
         vec2 g = 0.00075*vec2( (h1-h), (h2-h) )/e;
             // isoline    
-        vec2 f = g.yx*vec2(-1.0,1.0);
-        // vec2 f = g.yx*vec2(10.0*mouseX, 10.0*mouseY);
+        // vec2 f = g.yx*vec2(-1.0,1.0);
+        vec2 f = g.yx*vec2(10.0*mouseX, 10.0*mouseY);
         
         g = mix( g, f, 0.5 );
         
-        uv += 0.00075*g*cos(time);
+        uv -= 0.00075*g;
       }
       
       vec3 col = texture2D(texture, uv).xyz;
@@ -109,6 +109,49 @@ void main(){
        //  col *= 2.0;
         
       gl_FragColor = vec4(col, 1.0);
+    }
+</script>
+<script id="chromaFs">
+    uniform sampler2D texture;
+    uniform float time; // seconds
+    varying vec2 vUv;
+    uniform vec2 resolution;
+    uniform float mouseX;
+    uniform float mouseY;
+
+    void main(void) {
+      float   centerBuffer    = -0.5,
+      vignetteStrength  = 0.0,
+      aberrationStrength  = 1.2;
+      
+      float   chrDist,
+      vigDist;
+      
+      vec2 uv = vUv;
+      
+      //calculate how far each pixel is from the center of the screen
+      vec2 vecDist = uv - ( 0.5 , 0.5 );
+      chrDist = vigDist = length( vecDist );
+      
+      //modify the distance from the center, so that only the edges are affected
+      chrDist -= centerBuffer;
+      if( chrDist < 0.0 ) chrDist = 0.0;
+      
+      //distort the UVs
+      vec2 uvR = uv * ( 1.0 + chrDist * 0.02 * aberrationStrength ),
+      uvB = uv * ( 1.0 - chrDist * 0.02 * aberrationStrength );
+      
+      //get the individual channels using the modified UVs
+      vec4 c;
+      
+      c.x = texture2D( texture , uvR ).x;
+      c.y = texture2D( texture , uv ).y;
+      c.z = texture2D( texture , uvB ).z;
+      
+      //apply vignette
+      c *= 1.0 - vigDist* vignetteStrength;
+      
+      gl_FragColor = c;
     }
 </script>
 <script src="three.min.js"></script>
