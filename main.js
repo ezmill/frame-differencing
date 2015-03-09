@@ -58,8 +58,9 @@ function initCameraTex(){
         	var url = window.URL || window.webkitURL;
 			video = document.createElement("video");
 	        video.src = url ? url.createObjectURL(stream) : stream;
-	        // video.src = "lamp.mp4";
-	        // video.playbackRate = 0.002;
+	        // video.src = "satin.mp4";
+	        // video.loop = true;
+	        // video.playbackRate = 0.25;
 	        video.play();
 	        videoLoaded = true;
 	        tex = new THREE.Texture(video);
@@ -86,7 +87,7 @@ function initFrameDifferencing(){
 			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("flowFs").textContent
+		fragmentShader: document.getElementById("blurFrag").textContent
 	});
 	mesh1 = new THREE.Mesh(planeGeometry, material1);
 	mesh1.position.set(0, 0, 0);
@@ -102,7 +103,7 @@ function initFrameDifferencing(){
 			texture2: {type: 't', value: camTex}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("fbFs").textContent
+		fragmentShader: document.getElementById("fs").textContent
 	});
 	mesh2 = new THREE.Mesh(planeGeometry, material2);
 	mesh2.position.set(0, 0, 0);
@@ -135,7 +136,7 @@ function initFrameDifferencing(){
 			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("fbFs").textContent
+		fragmentShader: document.getElementById("chromaFs").textContent
 	});
 	meshFB = new THREE.Mesh(planeGeometry, materialFB);
 	sceneFB.add(meshFB);
@@ -151,7 +152,7 @@ function initFrameDifferencing(){
 			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("chromaFs").textContent
+		fragmentShader: document.getElementById("flowFs").textContent
 	});
 	meshFB2 = new THREE.Mesh(planeGeometry, materialFB2);
 	sceneFB2.add(meshFB2);
@@ -170,7 +171,7 @@ function draw(){
 	time+=0.01;
     camTex.needsUpdate = true;
 
-    expand(1.0);
+    // expand(1.01);
     // materialDiff.uniforms.texture.value = rtFB;
     material1.uniforms.texture.value = rtDiff;
     // material2.uniforms.texture.value = rtFB;
