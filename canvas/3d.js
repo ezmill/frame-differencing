@@ -31,10 +31,10 @@ function initCanvasScene(){
 
 	canvasScene = new THREE.Scene();
 
-	canvasGeometry = new THREE.SphereGeometry(100,100,100);
-	canvasMaterial = new THREE.MeshPhongMaterial({color: 0xff0000});
+	canvasGeometry = new THREE.CubeGeometry(100,100,100);
+	canvasMaterial = new THREE.MeshPhongMaterial({color: 0x000000});
 
-	canvasLight = new THREE.DirectionalLight({color:0xffffff});
+	canvasLight = new THREE.DirectionalLight(0xffffff, 1.0);
 	canvasLight.position.set(0,0,100);
 	canvasScene.add(canvasLight);
 	canvasMesh = new THREE.Mesh(canvasGeometry, canvasMaterial);
@@ -46,6 +46,9 @@ function initCanvasScene(){
 }
 function canvasAnimate(){
 	window.requestAnimationFrame(canvasAnimate);
+	canvasMesh.rotation.x = Date.now()*0.0001;
+	canvasMesh.rotation.y = Date.now()*0.0001;
+	canvasMesh.rotation.z = Date.now()*0.0001;
 	canvasRenderer.render(canvasScene, canvasCamera);
 }
 function initScene(){
@@ -141,7 +144,7 @@ function initFrameDifferencing(){
 			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("sharpenFrag").textContent
+		fragmentShader: document.getElementById("blurFrag").textContent
 	});
 	mesh1 = new THREE.Mesh(planeGeometry, material1);
 	mesh1.position.set(0, 0, 0);
@@ -157,7 +160,7 @@ function initFrameDifferencing(){
 			texture2: {type: 't', value: camTex}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("blurFrag").textContent
+		fragmentShader: document.getElementById("chromaFs2").textContent
 	});
 	mesh2 = new THREE.Mesh(planeGeometry, material2);
 	mesh2.position.set(0, 0, 0);
@@ -190,7 +193,7 @@ function initFrameDifferencing(){
 			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("blurFrag").textContent
+		fragmentShader: document.getElementById("sharpenFrag").textContent
 	});
 	meshFB = new THREE.Mesh(planeGeometry, materialFB);
 	sceneFB.add(meshFB);
@@ -206,7 +209,7 @@ function initFrameDifferencing(){
 			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("sharpenFrag").textContent
+		fragmentShader: document.getElementById("fbFs").textContent
 	});
 	meshFB2 = new THREE.Mesh(planeGeometry, materialFB2);
 	sceneFB2.add(meshFB2);
