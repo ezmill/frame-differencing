@@ -57,7 +57,7 @@ void main(){
 
     vec2 tc = vUv;
     vec4 look = texture2D(texture,tc);//sample repos texture
-    vec2 offs = vec2(look.y-look.x,look.w-look.z)*0.001;
+    vec2 offs = vec2(look.y-look.x,look.w-look.z)*0.009;
     vec2 coord = offs+tc;  //relative coordinates
     
     vec4 repos = texture2D(texture, coord);
@@ -82,7 +82,7 @@ void main(){
       vec2 uv = vUv;
       // vec2 uv = vUv*0.05 + vec2(0.62, 0.57);
       
-      vec2 e = 0.5/resolution.xy;
+      vec2 e = 1.0/resolution.xy;
       
       
        float am1 = 0.5*sin( time );
@@ -91,7 +91,7 @@ void main(){
       // float am2 = 10.0;
       
       for( int i=0; i<25; i++ ){
-        float h  = dot( texture2D(texture, uv             ).xyz, vec3(0.333) );
+        float h  = dot( texture2D(texture, uv*0.5             ).xyz, vec3(0.333) );
         float h1 = dot( texture2D(texture, uv+vec2(e.x,mouseX)).xyz, vec3(0.333) );
         float h2 = dot( texture2D(texture, uv+vec2(mouseY,e.y)).xyz, vec3(0.333) );
             // gradient
@@ -102,12 +102,12 @@ void main(){
         
         g = mix( g, f, 0.5 );
         
-        uv += 0.00075*g;
+        uv -= 0.000075*g;
       }
       
       vec3 col = texture2D(texture, uv).xyz;
       
-       //  col *= 2.0;
+        col *= 2.0;
         
       gl_FragColor = vec4(col, 1.0);
     }
@@ -262,8 +262,8 @@ uniform vec2 resolution;
 varying vec2 vUv;
 
 void main() {
-  float step_w = 1.75/resolution.x;
-  float step_h = 1.75/resolution.y;
+  float step_w = 1.0/resolution.x;
+  float step_h = 1.0/resolution.y;
   vec2 tc = vUv;
   vec4 input0 = texture2D(texture,tc);
    
@@ -285,24 +285,50 @@ uniform sampler2D texture;
 uniform vec2 resolution;
 
 varying vec2 vUv;
-
+float kernel[9];
+vec2 offset[9];
 void main() {
-  float step_w = 1.75/resolution.x;
-  float step_h = 1.75/resolution.y;
+  float step_w = 1.0/resolution.x;
+  float step_h = 1.0/resolution.y;
   vec2 tc = vUv;
   vec4 input0 = texture2D(texture,tc);
    
-  vec2 x1 = vec2(step_w, 0.0);
-  vec2 y1 = vec2(0.0, step_h);
+  // kernel[0] = -2.0; kernel[1] = -1.0; kernel[2] = 0.0;
+  // kernel[3] = -1.0; kernel[4] = 1.0; kernel[5] = 1.0;
+  // kernel[6] = 0.0; kernel[7] = 1.0; kernel[8] = 2.0; 
+  kernel[0] = -1.0; kernel[1] = -1.0; kernel[2] = -1.0;
+  kernel[3] = -1.0; kernel[4] = 8.0; kernel[5] = -1.0;
+  kernel[6] = -1.0; kernel[7] = -1.0; kernel[8] = -1.0; 
+
+
+  offset[0] = vec2(-step_w, -step_h);
+  offset[1] = vec2(0.0, -step_h);
+  offset[2] = vec2(step_w, -step_h);
+  offset[3] = vec2(-step_w, 0.0);
+  offset[4] = vec2(0.0, 0.0);
+  offset[5] = vec2(step_w, 0.0);
+  offset[6] = vec2(-step_w, step_h);
+  offset[7] = vec2(0.0, step_h);
+  offset[8] = vec2(step_w, step_h);
     
-  input0 += texture2D(texture, tc+x1); // right
-  input0 += texture2D(texture, tc-x1); // left
-  input0 += texture2D(texture, tc+y1); // top
-  input0 += texture2D(texture, tc-y1); // bottom
+  input0 += texture2D(texture, tc + offset[0]) * kernel[0];
+  input0 += texture2D(texture, tc + offset[1]) * kernel[1];
+  input0 += texture2D(texture, tc + offset[2]) * kernel[2];
+  input0 += texture2D(texture, tc + offset[3]) * kernel[3];
+  input0 += texture2D(texture, tc + offset[4]) * kernel[4];
+  input0 += texture2D(texture, tc + offset[5]) * kernel[5];
+  input0 += texture2D(texture, tc + offset[6]) * kernel[6];
+  input0 += texture2D(texture, tc + offset[7]) * kernel[7];
+  input0 += texture2D(texture, tc + offset[8]) * kernel[8];
 
-  input0 *=0.2;
 
-  gl_FragColor = input0;
+  // input0 *=0.2;
+  float kernelWeight = kernel[0] + kernel[2] + kernel[3] + kernel[4] + kernel[5] + kernel[6] + kernel[7] + kernel[8]; 
+
+  if (kernelWeight <= 0.0) {
+     kernelWeight = 1.0;
+   }
+  gl_FragColor = vec4((input0/kernelWeight).rgb, 1.0);
 }
 </script>
 <script src="../three.min.js"></script>
@@ -310,6 +336,6 @@ void main() {
 <script src="../Detector.js"></script>
 <script src="../OrbitControls.js"></script>
 <script src="../dat.gui.min.js"></script>
-<script src="main.js"></script>
+<script src="3d.js"></script>
 </body>
 </html>

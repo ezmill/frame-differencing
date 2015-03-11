@@ -58,7 +58,7 @@ function initCameraTex(){
         	var url = window.URL || window.webkitURL;
 			video = document.createElement("video");
 	        // video.src = url ? url.createObjectURL(stream) : stream;
-	        video.src = "lamp.mp4";
+	        video.src = "../lamp.mp4";
 	        // video.loop = true;
 	        video.playbackRate = 0.002;
 	        video.play();

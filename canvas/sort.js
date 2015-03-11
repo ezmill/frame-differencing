@@ -55,7 +55,7 @@ function initCanvasTex(){
 	canvas = document.createElement("canvas");
 	canvas.width = w;
 	canvas.height = h;
-	sliceSize = 0.0001;
+	sliceSize = 50;
 	// document.body.appendChild(canvas);
 	// canvas.style['z-index'] = -1;
 	ctx = canvas.getContext("2d");
@@ -63,7 +63,7 @@ function initCanvasTex(){
 	image.onload = function (){
 		ctx.drawImage(image, 0, 0);
 	}
-	image.src = "../img/b-w2.jpg";
+	image.src = "../img/clouds.jpg";
 
     tex = new THREE.Texture(canvas);
     tex.needsUpdate = true;
@@ -108,7 +108,7 @@ function initFrameDifferencing(){
 			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("sharpenFrag").textContent
+		fragmentShader: document.getElementById("blurFrag").textContent
 	});
 	mesh1 = new THREE.Mesh(planeGeometry, material1);
 	mesh1.position.set(0, 0, 0);
@@ -124,7 +124,7 @@ function initFrameDifferencing(){
 			texture2: {type: 't', value: camTex}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("blurFrag").textContent
+		fragmentShader: document.getElementById("fbFs").textContent
 	});
 	mesh2 = new THREE.Mesh(planeGeometry, material2);
 	mesh2.position.set(0, 0, 0);
@@ -157,7 +157,7 @@ function initFrameDifferencing(){
 			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("blurFrag").textContent
+		fragmentShader: document.getElementById("fbFs").textContent
 	});
 	meshFB = new THREE.Mesh(planeGeometry, materialFB);
 	sceneFB.add(meshFB);
@@ -173,7 +173,7 @@ function initFrameDifferencing(){
 			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("sharpenFrag").textContent
+		fragmentShader: document.getElementById("fbFs").textContent
 	});
 	meshFB2 = new THREE.Mesh(planeGeometry, materialFB2);
 	sceneFB2.add(meshFB2);
@@ -188,21 +188,25 @@ function animate(){
 	draw();
 }
 function canvasDraw(){
-	var randW = Math.random()*(w-sliceSize);
-	var randH = Math.random()*(h-sliceSize);
-	var randPart = ctx.getImageData(randW, randH, sliceSize, sliceSize);
-	var randData = randPart.data;
-	var newRandW = Math.random()*w;
-	var newRandH = Math.random()*h;
-	// if(newRandW > w + 10){
-	// 	newRandW = w/2;
-	// }
-	// if(newRandH > h + 10){
-	// 	newRandH = h/2;
-	// }
+	var copy = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    var copyData = copy.data;
+    for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+            var pixel = (y * w + x) * 4;
+            var red = pixel;
+            var green = pixel + 1;
+            var blue = pixel + 2;
+            // if(copyData[pixel-w*4]>copyData[pixel]){
+            if (copyData[pixel + 4] > copyData[pixel]) {
 
-	ctx.putImageData(randPart, newRandW, newRandH );
+                swap(copyData, red, red - 4 * w - 4, green, green - 4 * w - 4, blue, blue - 4 * w - 4);
+                // swap(copyData,red,red+4,green,green+4,blue,blue+4);
+
+            }
+        }
+	}
 }
+
 function draw(){
 	time+=0.01;
 	canvasDraw();
@@ -291,4 +295,16 @@ function screenshot(){
 		    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 		}
 	}
+}
+
+function swap(x, rl, rr, gl, gr, bl, br) {
+    var tempr = x[rl];
+    x[rl] = x[rr];
+    x[rr] = tempr;
+    var tempg = x[gl];
+    x[gl] = x[gr];
+    x[gr] = tempg;
+    var tempb = x[bl];
+    x[bl] = x[br];
+    x[br] = tempb;
 }

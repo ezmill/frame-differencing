@@ -14,7 +14,40 @@ var planeGeometry;
 var mesh1, mesh2;
 var mouseX, mouseY;
 var time = 0.0;
-initScene();
+initCanvasScene();
+function initCanvasScene(){
+	canvasCamera = new THREE.PerspectiveCamera(50, w / h, 1, 100000);
+    canvasCamera.position.set(0,0, 750);//test
+
+	canvasControls = new THREE.OrbitControls(canvasCamera);
+	canvasRenderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true});
+	canvasRenderer.setSize(w,h);
+	canvasRenderer.setClearColor(0xffffff, 1);
+	// container = document.createElement('div');
+
+    // document.body.appendChild(container);
+
+    // container.appendChild(canvasRenderer.domElement);
+
+	canvasScene = new THREE.Scene();
+
+	canvasGeometry = new THREE.SphereGeometry(100,100,100);
+	canvasMaterial = new THREE.MeshPhongMaterial({color: 0xff0000});
+
+	canvasLight = new THREE.DirectionalLight({color:0xffffff});
+	canvasLight.position.set(0,0,100);
+	canvasScene.add(canvasLight);
+	canvasMesh = new THREE.Mesh(canvasGeometry, canvasMaterial);
+	canvasMesh.position.set(0,0,0);
+	canvasScene.add(canvasMesh);
+	canvasAnimate();
+	initScene();
+
+}
+function canvasAnimate(){
+	window.requestAnimationFrame(canvasAnimate);
+	canvasRenderer.render(canvasScene, canvasCamera);
+}
 function initScene(){
 	container = document.createElement('div');
     document.body.appendChild(container);
@@ -24,7 +57,7 @@ function initScene(){
     cameraRTT = new THREE.OrthographicCamera( w / - 2, w / 2, h / 2, h / - 2, -10000, 10000 );
 	cameraRTT.position.z = 100;
 
-	controls = new THREE.OrbitControls(camera);
+	// controls = new THREE.OrbitControls(camera);
 
 
     renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true});
@@ -65,7 +98,7 @@ function initCanvasTex(){
 	}
 	image.src = "../img/b-w2.jpg";
 
-    tex = new THREE.Texture(canvas);
+    tex = new THREE.Texture(canvasRenderer.domElement);
     tex.needsUpdate = true;
     camTex = tex;
     initFrameDifferencing();
