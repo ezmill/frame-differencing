@@ -52,10 +52,10 @@ function initGlobalUniforms(){
 	}
 }
 function initCameraTex(){
-    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
-    if (navigator.getUserMedia) {       
-        navigator.getUserMedia({video: true, audio: false}, function(stream){
-        	var url = window.URL || window.webkitURL;
+    // navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
+    // if (navigator.getUserMedia) {       
+    //     navigator.getUserMedia({video: true, audio: false}, function(stream){
+    //     	var url = window.URL || window.webkitURL;
 			video = document.createElement("video");
 	        // video.src = url ? url.createObjectURL(stream) : stream;
 	        video.src = "../satin.mp4";
@@ -67,10 +67,10 @@ function initCameraTex(){
 	        tex.needsUpdate = true;
 	        camTex = tex;
 	        initFrameDifferencing();
-        }, function(error){
-		   console.log("Failed to get a stream due to", error);
-	    });
-	}
+ //        }, function(error){
+	// 	   console.log("Failed to get a stream due to", error);
+	//     });
+	// }
 }
 
 function initFrameDifferencing(){
