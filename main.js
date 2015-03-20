@@ -57,10 +57,10 @@ function initCameraTex(){
         navigator.getUserMedia({video: true, audio: false}, function(stream){
         	var url = window.URL || window.webkitURL;
 			video = document.createElement("video");
-	        video.src = url ? url.createObjectURL(stream) : stream;
-	        // video.src = "satin.mp4";
-	        // video.loop = true;
-	        // video.playbackRate = 0.25;
+	        // video.src = url ? url.createObjectURL(stream) : stream;
+	        video.src = "satin.mp4";
+	        video.loop = true;
+	        video.playbackRate = 2.0;
 	        video.play();
 	        videoLoaded = true;
 	        tex = new THREE.Texture(video);
@@ -87,7 +87,7 @@ function initFrameDifferencing(){
 			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("blurFrag").textContent
+		fragmentShader: document.getElementById("colorFs").textContent
 	});
 	mesh1 = new THREE.Mesh(planeGeometry, material1);
 	mesh1.position.set(0, 0, 0);
@@ -103,7 +103,7 @@ function initFrameDifferencing(){
 			texture2: {type: 't', value: camTex}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("fs").textContent
+		fragmentShader: document.getElementById("flowFs").textContent
 	});
 	mesh2 = new THREE.Mesh(planeGeometry, material2);
 	mesh2.position.set(0, 0, 0);
@@ -136,7 +136,7 @@ function initFrameDifferencing(){
 			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("chromaFs").textContent
+		fragmentShader: document.getElementById("colorFs").textContent
 	});
 	meshFB = new THREE.Mesh(planeGeometry, materialFB);
 	sceneFB.add(meshFB);
@@ -152,12 +152,28 @@ function initFrameDifferencing(){
 			mouseY: {type: 'f', value: mouseY}
 		},
 		vertexShader: document.getElementById("vs").textContent,
-		fragmentShader: document.getElementById("flowFs").textContent
+		fragmentShader: document.getElementById("blurFrag").textContent
 	});
 	meshFB2 = new THREE.Mesh(planeGeometry, materialFB2);
 	sceneFB2.add(meshFB2);
 
-	material = new THREE.MeshBasicMaterial({map: rtFB2});
+	sceneFB3 = new THREE.Scene();
+	rtFB3 = new THREE.WebGLRenderTarget(w, h, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat });
+	materialFB3 = new THREE.ShaderMaterial({
+		uniforms: {
+			time: { type: 'f' , value: time},
+			resolution: {type: 'v2', value: new THREE.Vector2(w,h)},
+			texture: {type: 't', value: rtFB2},
+			mouseX: {type: 'f', value: mouseX},
+			mouseY: {type: 'f', value: mouseY}
+		},
+		vertexShader: document.getElementById("vs").textContent,
+		fragmentShader: document.getElementById("flow3").textContent
+	});
+	meshFB3 = new THREE.Mesh(planeGeometry, materialFB3);
+	sceneFB3.add(meshFB3);
+
+	material = new THREE.MeshBasicMaterial({map: rtFB3});
 	mesh = new THREE.Mesh(planeGeometry, material);
 	scene.add(mesh);
 
@@ -182,6 +198,7 @@ function draw(){
 
 	renderer.render(sceneFB, cameraRTT, rtFB, true);
 	renderer.render(sceneFB2, cameraRTT, rtFB2, true);
+	renderer.render(sceneFB3, cameraRTT, rtFB3, true);
 
 	renderer.render(scene, camera);
 
@@ -205,9 +222,11 @@ function onDocumentMouseMove(event){
 	unMappedMouseX = (event.clientX );
     unMappedMouseY = (event.clientY );
     // mouseX = map(unMappedMouseX, window.innerWidth, -10.0,10.0);
+    mouseX = map(unMappedMouseX, window.innerWidth, -1.0,1.0);
     // mouseY = map(unMappedMouseY, window.innerHeight, -10.0,10.0);
-    mouseX = 0.03344481605351213;
-    mouseY = 7.096336499321573;
+    mouseY = map(unMappedMouseY, window.innerHeight, -1.0,1.0);
+    // mouseX = 0.03344481605351213;
+    // mouseY = 7.096336499321573;
 
     materialFB2.uniforms.mouseX.value = mouseX;
     material1.uniforms.mouseX.value = mouseX;
